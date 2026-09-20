@@ -1,0 +1,29 @@
+* { box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; margin: 0; padding: 0; }
+body { background: #eef1f6; color: #1f2937; }
+.topbar { background: #111c34; color: #fff; }
+.topbar-inner { max-width: 860px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+.logo { font-size: 20px; font-weight: 700; }
+.logo span { color: #7aa2ff; }
+.barra-usuario { display: flex; align-items: center; gap: 12px; }
+#nombre-usuario { font-weight: 600; color: #cdd8ff; }
+.contenedor { max-width: 860px; margin: 24px auto; padding: 0 20px 40px; display: grid; gap: 18px; }
+.card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(17, 28, 52, .08); }
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+h2 { font-size: 18px; } h3 { font-size: 15px; margin: 14px 0 8px; color: #374151; }
+button { background: #2f54eb; border: none; border-radius: 8px; color: #fff; cursor: pointer; padding: 10px 16px; font-size: 14px; font-weight: 600; }
+button:hover { background: #1d39c4; }
+button.secundario { background: #e5e9f2; color: #1f2937; }
+button:disabled { background: #a5a5b8; cursor: not-allowed; }
+button.oculto, .oculto { display: none !important; }
+input { border: 1px solid #cbd2e1; border-radius: 8px; margin-bottom: 10px; padding: 10px; width: 100%; font-size: 14px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+.mensaje { color: #2f54eb; min-height: 20px; margin-bottom: 10px; }
+#lista-ot { list-style: none; display: grid; gap: 10px; }
+#lista-ot li.ot { display: flex; justify-content: space-between; align-items: center; background: #f7f9fd; border: 1px solid #e3e8f2; border-radius: 10px; padding: 12px 14px; }
+#lista-ot li.ot:hover { border-color: #2f54eb; }
+.muted { color: #6b7280; font-size: 13px; }
+.total { font-weight: 700; color: #111c34; white-space: nowrap; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e5e9f2; }
+th { color: #6b7280; font-weight: 600; }

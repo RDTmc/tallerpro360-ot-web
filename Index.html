@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TallerPro360 — Órdenes de Trabajo</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+<div class="topbar-inner">
+<span class="logo">TallerPro<span>360</span></span>
+<div class="barra-usuario">
+<span id="nombre-usuario"></span>
+<button id="btn-login">Iniciar sesión</button>
+<button id="btn-salir" class="oculto">Cerrar sesión</button>
+</div>
+</div>
+</header>
+<main class="contenedor">
+<section class="card">
+<div class="card-head">
+<h2>Órdenes de trabajo</h2>
+<button id="btn-consultar" disabled>Actualizar</button>
+</div>
+<p id="mensaje" class="mensaje"></p>
+<ul id="lista-ot"></ul>
+</section>
+<section id="detalle" class="card oculto">
+<div class="card-head">
+<h2 id="detalle-titulo">Detalle</h2>
+<button id="btn-cerrar-detalle" class="secundario">Cerrar</button>
+</div>
+<div id="detalle-cuerpo"></div>
+</section>
+<section class="card">
+<h2>Nueva orden</h2>
+<form id="form-crear">
+<div class="grid2">
+<input type="text" id="input-cliente" placeholder="Cliente (ej: CLI-004)" required maxlength="20">
+<input type="text" id="input-patente" placeholder="Patente (ej: ZZXX99)" required maxlength="10">
+</div>
+<input type="text" id="input-descripcion" placeholder="Descripción" maxlength="200">
+<div class="grid2">
+<input type="number" id="input-total" placeholder="Total CLP" min="0" step="1" value="0">
+</div>
+<h3>Ítems</h3>
+<div id="items"></div>
+<button type="button" id="btn-agregar-item" class="secundario">+ Agregar ítem</button>
+<button type="submit" disabled>Crear orden</button>
+</form>
+</section>
+</main>
+<script src="https://alcdn.msftauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
