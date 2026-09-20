@@ -13,4 +13,5 @@ jobs:
           node-version: "20"
       - run: node --check app.js
       - run: grep -q "msal-browser" Index.html && grep -q "btn-login" Index.html && grep -q "REDIRECT_URI" app.js
-      - run: test "$(curl -s -o /dev/null -w '%{http_code}' -X OPTIONS https://ny0gbkz69g.execute-api.us-east-1.amazonaws.com/api/ot -H 'Origin: https://54-87-63-105.sslip.io' -H 'Access-Control-Request-Method: GET')" = "204"
+      - run: |
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X OPTIONS https://ny0gbkz69g.execute-api.us-east-1.amazonaws.com/api/ot -H 'Origin: https://54-87-63-105.sslip.io' -H 'Access-Control-Request-Method: GET')" = "204"
