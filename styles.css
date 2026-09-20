@@ -13,6 +13,8 @@ h2 { font-size: 18px; } h3 { font-size: 15px; margin: 14px 0 8px; color: #374151
 button { background: #2f54eb; border: none; border-radius: 8px; color: #fff; cursor: pointer; padding: 10px 16px; font-size: 14px; font-weight: 600; }
 button:hover { background: #1d39c4; }
 button.secundario { background: #e5e9f2; color: #1f2937; }
+button.peligro { background: #dc2626; }
+button.peligro:hover { background: #b91c1c; }
 button:disabled { background: #a5a5b8; cursor: not-allowed; }
 button.oculto, .oculto { display: none !important; }
 input { border: 1px solid #cbd2e1; border-radius: 8px; margin-bottom: 10px; padding: 10px; width: 100%; font-size: 14px; }

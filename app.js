@@ -66,18 +66,23 @@ function pintarLista(ots) {
 }
 async function obtenerOTs() {
   try {
-    mensaje.textContent = "";
+    mensaje.textContent = "Cargando…";
     const r = await api("/api/ot");
     if (r.status === 401) { mensaje.textContent = "Sesión expirada: inicia sesión de nuevo."; return; }
+    if (r.status === 403) { mensaje.textContent = "Sin permiso para ver órdenes."; return; }
     if (!r.ok) throw new Error("HTTP " + r.status);
+    mensaje.textContent = "";
     pintarLista(await r.json());
   } catch (e) { mensaje.textContent = "Error al consultar: " + e.message; }
 }
+let detalleIdActual = null;
 async function verDetalle(otId) {
   try {
     const r = await api("/api/ot/" + encodeURIComponent(otId));
+    if (r.status === 404) { mensaje.textContent = "La orden ya no existe."; obtenerOTs(); return; }
     if (!r.ok) throw new Error("HTTP " + r.status);
     const ot = await r.json();
+    detalleIdActual = ot.ot_id;
     detalleTitulo.textContent = ot.ot_id + " · " + ot.patente;
     detalleCuerpo.innerHTML =
       `<p><strong>Cliente:</strong> ${ot.cliente_id} · <strong>Total:</strong> ${fmtCLP(ot.total)}</p>
@@ -119,6 +124,19 @@ btnLogin.addEventListener("click", () => pca.loginRedirect({ scopes: [SCOPE] }))
 btnSalir.addEventListener("click", () => pca.logoutRedirect());
 btnConsultar.addEventListener("click", obtenerOTs);
 $("btn-agregar-item").addEventListener("click", () => agregarItem());
+async function eliminarActual() {
+  if (!detalleIdActual) return;
+  if (!confirm("¿Eliminar la orden " + detalleIdActual + "?")) return;
+  try {
+    const r = await api("/api/ot/" + encodeURIComponent(detalleIdActual), { method: "DELETE" });
+    if (r.status === 404) { mensaje.textContent = "La orden ya no existe."; }
+    else if (!r.ok) throw new Error("HTTP " + r.status);
+    else mensaje.textContent = "Orden " + detalleIdActual + " eliminada.";
+    detalle.classList.add("oculto"); detalleIdActual = null;
+    obtenerOTs();
+  } catch (e) { mensaje.textContent = "Error al eliminar: " + e.message; }
+}
+$("btn-eliminar").addEventListener("click", eliminarActual);
 $("btn-cerrar-detalle").addEventListener("click", () => detalle.classList.add("oculto"));
 formCrear.addEventListener("submit", crearOT);
 agregarItem();
