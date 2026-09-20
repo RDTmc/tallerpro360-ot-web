@@ -1,11 +1,13 @@
-* { box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; margin: 0; padding: 0; }
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap");
+* { box-sizing: border-box; font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif; margin: 0; padding: 0; }
 body { background: #eef1f6; color: #1f2937; }
 .topbar { background: #111c34; color: #fff; }
 .topbar-inner { max-width: 860px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
 .logo { font-size: 20px; font-weight: 700; }
 .logo span { color: #7aa2ff; }
 .barra-usuario { display: flex; align-items: center; gap: 12px; }
-#nombre-usuario { font-weight: 600; color: #cdd8ff; }
+#nombre-usuario { font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 500; color: #cdd8ff; }
+.titulo-seccion { font-family: "JetBrains Mono", monospace; text-transform: uppercase; letter-spacing: 1px; }
 .contenedor { max-width: 860px; margin: 24px auto; padding: 0 20px 40px; display: grid; gap: 18px; }
 .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(17, 28, 52, .08); }
 .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
