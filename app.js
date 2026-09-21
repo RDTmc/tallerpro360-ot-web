@@ -21,7 +21,7 @@ const btnConsultar = $("btn-consultar"), listaOT = $("lista-ot"),
   nombreUsuario = $("nombre-usuario"), itemsDiv = $("items"),
   detalle = $("detalle"), detalleTitulo = $("detalle-titulo"),
   detalleCuerpo = $("detalle-cuerpo");
-const fmtCLP = (n) => "$" + Number(n || 0).toLocaleString("es-CL");
+/* fmtCLP, normalizarPatente y subtotalItem vienen de utils.js (script previo). */
 let temporizadorBusqueda = null, temporizadorCliente = null, detalleIdActual = null;
 
 function cuentaActual() { return pca.getAllAccounts()[0] || null; }
