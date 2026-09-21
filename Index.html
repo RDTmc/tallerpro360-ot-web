@@ -44,8 +44,13 @@
 <input type="search" id="input-buscar-cliente" placeholder="Buscar por RUT, nombre o código…" autocomplete="off">
 <input type="hidden" id="input-cliente" value="">
 <div id="sugerencias-cliente"></div>
-<button type="button" id="btn-nuevo-cliente" class="secundario">+ Nuevo cliente</button>
-<div id="form-cliente" class="oculto">
+<button type="button" id="btn-nuevo-cliente" class="secundario accion">+ Nuevo cliente</button>
+<div id="modal-cliente" class="modal oculto">
+<div class="modal-caja">
+<div class="card-head">
+<h3 class="titulo-seccion">Nuevo cliente</h3>
+<button type="button" id="btn-cerrar-modal" class="secundario">✕</button>
+</div>
 <div class="grid2">
 <input type="text" id="cli-rut" placeholder="RUT (ej: 55555555-5)" maxlength="12">
 <input type="text" id="cli-codigo" placeholder="Código (ej: CLI-005)" maxlength="20">
@@ -59,6 +64,8 @@
 <input type="email" id="cli-correo" placeholder="Correo" maxlength="100">
 </div>
 <input type="tel" id="cli-telefono" placeholder="Teléfono" maxlength="20">
+<button type="button" id="btn-guardar-cliente">Guardar cliente</button>
+</div>
 </div>
 <input type="text" id="input-patente" placeholder="Patente (ej: ZZXX99)" required maxlength="10">
 <input type="text" id="input-descripcion" placeholder="Descripción" maxlength="200">

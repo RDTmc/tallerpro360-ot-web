@@ -20,6 +20,10 @@ button.peligro:hover { background: #b91c1c; }
 .sugerencia { display: block; width: 100%; text-align: left; margin-bottom: 6px; }
 #sugerencias-cliente { margin-bottom: 10px; }
 #form-cliente { border: 1px dashed #cbd2e1; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+button.accion { margin: 4px 0 14px; }
+.modal { position: fixed; inset: 0; background: rgba(17, 28, 52, .55); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+.modal-caja { background: #fff; border-radius: 12px; padding: 22px; width: 100%; max-width: 520px; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+.modal-caja .card-head { margin-bottom: 14px; }
 button:disabled { background: #a5a5b8; cursor: not-allowed; }
 button.oculto, .oculto { display: none !important; }
 input { border: 1px solid #cbd2e1; border-radius: 8px; margin-bottom: 10px; padding: 10px; width: 100%; font-size: 14px; }

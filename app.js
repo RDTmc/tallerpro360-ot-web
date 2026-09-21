@@ -137,26 +137,33 @@ function agregarItem(concepto = "", cantidad = 1, precio = 0) {
     <input type="number" placeholder="P. unit CLP" min="0" step="1" value="${precio}" required>`;
   itemsDiv.appendChild(row);
 }
+function abrirModalCliente() { $("modal-cliente").classList.remove("oculto"); }
+function cerrarModalCliente() { $("modal-cliente").classList.add("oculto"); }
+async function guardarClienteModal() {
+  try {
+    const nuevo = {
+      rut: $("cli-rut").value.trim(), codigo: $("cli-codigo").value.trim().toUpperCase(),
+      nombres: $("cli-nombres").value.trim(), apellidos: $("cli-apellidos").value.trim(),
+      fecha_nac: $("cli-fecha").value || null, correo: $("cli-correo").value.trim() || null,
+      telefono: $("cli-telefono").value.trim() || null,
+    };
+    if (!nuevo.rut || !nuevo.codigo || !nuevo.nombres || !nuevo.apellidos)
+      throw new Error("Completa RUT, código, nombres y apellidos.");
+    const rc = await api("/api/clientes", { method: "POST", body: JSON.stringify(nuevo) });
+    const dc = await rc.json();
+    if (rc.status === 409) throw new Error("Cliente ya existe (RUT o código).");
+    if (!rc.ok) throw new Error(dc.detail || "HTTP " + rc.status);
+    $("input-cliente").value = dc.codigo;
+    $("input-buscar-cliente").value = `${dc.nombres} ${dc.apellidos} (${dc.codigo})`;
+    cerrarModalCliente();
+    mensaje.textContent = "Cliente " + dc.codigo + " listo: completa la orden.";
+  } catch (e) { mensaje.textContent = "Error: " + e.message; }
+}
 async function crearOT(ev) {
   ev.preventDefault();
   try {
-    let codigo = $("input-cliente").value;
-    if (!codigo && !$("form-cliente").classList.contains("oculto")) {
-      const nuevo = {
-        rut: $("cli-rut").value.trim(), codigo: $("cli-codigo").value.trim().toUpperCase(),
-        nombres: $("cli-nombres").value.trim(), apellidos: $("cli-apellidos").value.trim(),
-        fecha_nac: $("cli-fecha").value || null, correo: $("cli-correo").value.trim() || null,
-        telefono: $("cli-telefono").value.trim() || null,
-      };
-      if (!nuevo.rut || !nuevo.codigo || !nuevo.nombres || !nuevo.apellidos)
-        throw new Error("Completa RUT, código, nombres y apellidos del cliente.");
-      const rc = await api("/api/clientes", { method: "POST", body: JSON.stringify(nuevo) });
-      const dc = await rc.json();
-      if (rc.status === 409) throw new Error("Cliente ya existe (RUT o código).");
-      if (!rc.ok) throw new Error(dc.detail || "HTTP " + rc.status);
-      codigo = dc.codigo;
-    }
-    if (!codigo) throw new Error("Selecciona o crea un cliente.");
+    const codigo = $("input-cliente").value;
+    if (!codigo) throw new Error("Busca y selecciona un cliente, o crea uno nuevo.");
     const items = [...itemsDiv.querySelectorAll(".item-row")].map((row) => {
       const [c, q, p] = row.querySelectorAll("input");
       return { concepto: c.value, cantidad: Number(q.value), precio_unit: Number(p.value) };
@@ -184,10 +191,10 @@ $("input-buscar-cliente").addEventListener("input", () => {
   clearTimeout(temporizadorCliente);
   temporizadorCliente = setTimeout(() => buscarClientes($("input-buscar-cliente").value.trim()), 300);
 });
-$("btn-nuevo-cliente").addEventListener("click", () => {
-  $("form-cliente").classList.toggle("oculto");
-  $("input-cliente").value = ""; $("input-buscar-cliente").value = "";
-});
+$("btn-nuevo-cliente").addEventListener("click", abrirModalCliente);
+$("btn-cerrar-modal").addEventListener("click", cerrarModalCliente);
+$("modal-cliente").addEventListener("click", (e) => { if (e.target.id === "modal-cliente") cerrarModalCliente(); });
+$("btn-guardar-cliente").addEventListener("click", guardarClienteModal);
 btnLogin.addEventListener("click", () => pca.loginRedirect({ scopes: [SCOPE] }));
 btnSalir.addEventListener("click", () => pca.logoutRedirect());
 btnConsultar.addEventListener("click", () => { $("input-buscar").value = ""; obtenerOTs(); });
