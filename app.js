@@ -51,17 +51,15 @@ async function api(path, opciones = {}) {
   });
 }
 let ordenesActuales = [];
+let temporizadorBusqueda = null;
 function pintarLista(ots) {
   ordenesActuales = ots;
-  aplicarFiltro();
+  pintarFiltradas(ots);
 }
-function aplicarFiltro() {
-  const q = ($("input-buscar").value || "").toLowerCase();
-  const filtradas = ordenesActuales.filter((ot) =>
-    (ot.ot_id + " " + ot.cliente_id + " " + ot.patente + " " + (ot.descripcion || "")).toLowerCase().includes(q));
+function pintarFiltradas(ots) {
   listaOT.innerHTML = "";
-  if (!filtradas.length) { listaOT.innerHTML = "<li>Sin resultados.</li>"; return; }
-  filtradas.forEach((ot) => {
+  if (!ots.length) { listaOT.innerHTML = "<li>Sin resultados.</li>"; return; }
+  ots.forEach((ot) => {
     const li = document.createElement("li");
     li.className = "ot";
     li.innerHTML = `<div><strong>${ot.ot_id}</strong> · ${ot.patente} · ${ot.cliente_id}<br>
@@ -72,18 +70,20 @@ function aplicarFiltro() {
     listaOT.appendChild(li);
   });
 }
-async function obtenerOTs() {
+async function obtenerOTs(q = "") {
   try {
     mensaje.textContent = "Cargando…";
-    const r = await api("/api/ot");
+    const r = await api("/api/ot" + (q ? "?q=" + encodeURIComponent(q) : ""));
     if (r.status === 401) { mensaje.textContent = "Sesión expirada: inicia sesión de nuevo."; return; }
     if (r.status === 403) { mensaje.textContent = "Sin permiso para ver órdenes."; return; }
     if (!r.ok) throw new Error("HTTP " + r.status);
     mensaje.textContent = "";
     const ots = await r.json();
     pintarLista(ots);
-    $("lista-clientes").innerHTML = [...new Set(ots.map((o) => o.cliente_id))]
-      .map((c) => `<option value="${c}">`).join("");
+    if (!q) {
+      $("lista-clientes").innerHTML = [...new Set(ots.map((o) => o.cliente_id))]
+        .map((c) => `<option value="${c}">`).join("");
+    }
   } catch (e) { mensaje.textContent = "Error al consultar: " + e.message; }
 }
 let detalleIdActual = null;
@@ -131,10 +131,13 @@ async function crearOT(ev) {
     obtenerOTs();
   } catch (e) { mensaje.textContent = "Error: " + e.message; }
 }
-$("input-buscar").addEventListener("input", aplicarFiltro);
+$("input-buscar").addEventListener("input", () => {
+  clearTimeout(temporizadorBusqueda);
+  temporizadorBusqueda = setTimeout(() => obtenerOTs($("input-buscar").value.trim()), 300);
+});
 btnLogin.addEventListener("click", () => pca.loginRedirect({ scopes: [SCOPE] }));
 btnSalir.addEventListener("click", () => pca.logoutRedirect());
-btnConsultar.addEventListener("click", obtenerOTs);
+btnConsultar.addEventListener("click", () => { $("input-buscar").value = ""; obtenerOTs(); });
 $("btn-agregar-item").addEventListener("click", () => agregarItem());
 async function eliminarActual() {
   if (!detalleIdActual) return;
