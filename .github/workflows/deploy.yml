@@ -1,5 +1,8 @@
 name: Deploy - ot-web (manual)
 on:
+  push:
+    branches: [main]
+    paths: ["Index.html", "app.js", "styles.css"]
   workflow_dispatch: {}
 jobs:
   deploy:
