@@ -22,6 +22,7 @@ const btnConsultar = $("btn-consultar"), listaOT = $("lista-ot"),
   detalle = $("detalle"), detalleTitulo = $("detalle-titulo"),
   detalleCuerpo = $("detalle-cuerpo");
 const fmtCLP = (n) => "$" + Number(n || 0).toLocaleString("es-CL");
+let temporizadorBusqueda = null, temporizadorCliente = null, detalleIdActual = null;
 
 function cuentaActual() { return pca.getAllAccounts()[0] || null; }
 async function obtenerToken() {
@@ -50,13 +51,8 @@ async function api(path, opciones = {}) {
     headers: { "Content-Type": "application/json", Authorization: "Bearer " + token, ...(opciones.headers || {}) },
   });
 }
-let ordenesActuales = [];
-let temporizadorBusqueda = null;
+// ---------- órdenes ----------
 function pintarLista(ots) {
-  ordenesActuales = ots;
-  pintarFiltradas(ots);
-}
-function pintarFiltradas(ots) {
   listaOT.innerHTML = "";
   if (!ots.length) { listaOT.innerHTML = "<li>Sin resultados.</li>"; return; }
   ots.forEach((ot) => {
@@ -78,15 +74,9 @@ async function obtenerOTs(q = "") {
     if (r.status === 403) { mensaje.textContent = "Sin permiso para ver órdenes."; return; }
     if (!r.ok) throw new Error("HTTP " + r.status);
     mensaje.textContent = "";
-    const ots = await r.json();
-    pintarLista(ots);
-    if (!q) {
-      $("lista-clientes").innerHTML = [...new Set(ots.map((o) => o.cliente_id))]
-        .map((c) => `<option value="${c}">`).join("");
-    }
+    pintarLista(await r.json());
   } catch (e) { mensaje.textContent = "Error al consultar: " + e.message; }
 }
-let detalleIdActual = null;
 async function verDetalle(otId) {
   try {
     const r = await api("/api/ot/" + encodeURIComponent(otId));
@@ -104,41 +94,6 @@ async function verDetalle(otId) {
     detalle.scrollIntoView({ behavior: "smooth" });
   } catch (e) { mensaje.textContent = "Error al ver detalle: " + e.message; }
 }
-function agregarItem(concepto = "", cantidad = 1, precio = 0) {
-  const row = document.createElement("div");
-  row.className = "grid3 item-row";
-  row.innerHTML = `<input placeholder="Concepto" value="${concepto}" required maxlength="40">
-    <input type="number" placeholder="Cant." min="0.01" step="0.01" value="${cantidad}" required>
-    <input type="number" placeholder="P. unit CLP" min="0" step="1" value="${precio}" required>`;
-  itemsDiv.appendChild(row);
-}
-async function crearOT(ev) {
-  ev.preventDefault();
-  try {
-    const items = [...itemsDiv.querySelectorAll(".item-row")].map((row) => {
-      const [c, q, p] = row.querySelectorAll("input");
-      return { concepto: c.value, cantidad: Number(q.value), precio_unit: Number(p.value) };
-    });
-    const body = {
-      cliente_id: $("input-cliente").value, patente: $("input-patente").value,
-      descripcion: $("input-descripcion").value, total: Number($("input-total").value || 0), items,
-    };
-    const r = await api("/api/ot", { method: "POST", body: JSON.stringify(body) });
-    const datos = await r.json();
-    if (!r.ok) throw new Error(datos.detail || datos.error || "HTTP " + r.status);
-    mensaje.textContent = "Orden " + datos.ot_id + " creada.";
-    formCrear.reset(); itemsDiv.innerHTML = ""; agregarItem();
-    obtenerOTs();
-  } catch (e) { mensaje.textContent = "Error: " + e.message; }
-}
-$("input-buscar").addEventListener("input", () => {
-  clearTimeout(temporizadorBusqueda);
-  temporizadorBusqueda = setTimeout(() => obtenerOTs($("input-buscar").value.trim()), 300);
-});
-btnLogin.addEventListener("click", () => pca.loginRedirect({ scopes: [SCOPE] }));
-btnSalir.addEventListener("click", () => pca.logoutRedirect());
-btnConsultar.addEventListener("click", () => { $("input-buscar").value = ""; obtenerOTs(); });
-$("btn-agregar-item").addEventListener("click", () => agregarItem());
 async function eliminarActual() {
   if (!detalleIdActual) return;
   if (!confirm("¿Eliminar la orden " + detalleIdActual + "?")) return;
@@ -151,6 +106,92 @@ async function eliminarActual() {
     obtenerOTs();
   } catch (e) { mensaje.textContent = "Error al eliminar: " + e.message; }
 }
+// ---------- clientes: buscador RUT/nombre + alta ----------
+async function buscarClientes(q) {
+  const box = $("sugerencias-cliente");
+  if (!q) { box.innerHTML = ""; return; }
+  try {
+    const r = await api("/api/clientes?q=" + encodeURIComponent(q));
+    if (!r.ok) return;
+    const rows = await r.json();
+    box.innerHTML = "";
+    rows.forEach((c) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "secundario sugerencia";
+      b.textContent = `${c.rut} · ${c.nombres} ${c.apellidos} (${c.codigo})`;
+      b.addEventListener("click", () => {
+        $("input-cliente").value = c.codigo;
+        $("input-buscar-cliente").value = `${c.nombres} ${c.apellidos} (${c.codigo})`;
+        box.innerHTML = "";
+      });
+      box.appendChild(b);
+    });
+    if (!rows.length) box.innerHTML = '<span class="muted">Sin coincidencias: usa "+ Nuevo cliente".</span>';
+  } catch (e) { /* reintenta al escribir */ }
+}
+function agregarItem(concepto = "", cantidad = 1, precio = 0) {
+  const row = document.createElement("div");
+  row.className = "grid3 item-row";
+  row.innerHTML = `<input placeholder="Concepto" value="${concepto}" required maxlength="40">
+    <input type="number" placeholder="Cant." min="0.01" step="0.01" value="${cantidad}" required>
+    <input type="number" placeholder="P. unit CLP" min="0" step="1" value="${precio}" required>`;
+  itemsDiv.appendChild(row);
+}
+async function crearOT(ev) {
+  ev.preventDefault();
+  try {
+    let codigo = $("input-cliente").value;
+    if (!codigo && !$("form-cliente").classList.contains("oculto")) {
+      const nuevo = {
+        rut: $("cli-rut").value.trim(), codigo: $("cli-codigo").value.trim().toUpperCase(),
+        nombres: $("cli-nombres").value.trim(), apellidos: $("cli-apellidos").value.trim(),
+        fecha_nac: $("cli-fecha").value || null, correo: $("cli-correo").value.trim() || null,
+        telefono: $("cli-telefono").value.trim() || null,
+      };
+      if (!nuevo.rut || !nuevo.codigo || !nuevo.nombres || !nuevo.apellidos)
+        throw new Error("Completa RUT, código, nombres y apellidos del cliente.");
+      const rc = await api("/api/clientes", { method: "POST", body: JSON.stringify(nuevo) });
+      const dc = await rc.json();
+      if (rc.status === 409) throw new Error("Cliente ya existe (RUT o código).");
+      if (!rc.ok) throw new Error(dc.detail || "HTTP " + rc.status);
+      codigo = dc.codigo;
+    }
+    if (!codigo) throw new Error("Selecciona o crea un cliente.");
+    const items = [...itemsDiv.querySelectorAll(".item-row")].map((row) => {
+      const [c, q, p] = row.querySelectorAll("input");
+      return { concepto: c.value, cantidad: Number(q.value), precio_unit: Number(p.value) };
+    });
+    const body = {
+      cliente_id: codigo, patente: $("input-patente").value,
+      descripcion: $("input-descripcion").value, total: Number($("input-total").value || 0), items,
+    };
+    const r = await api("/api/ot", { method: "POST", body: JSON.stringify(body) });
+    const datos = await r.json();
+    if (!r.ok) throw new Error(datos.detail || datos.error || "HTTP " + r.status);
+    mensaje.textContent = "Orden " + datos.ot_id + " creada.";
+    formCrear.reset(); $("input-cliente").value = "";
+    itemsDiv.innerHTML = ""; agregarItem();
+    obtenerOTs();
+  } catch (e) { mensaje.textContent = "Error: " + e.message; }
+}
+// ---------- eventos ----------
+$("input-buscar").addEventListener("input", () => {
+  clearTimeout(temporizadorBusqueda);
+  temporizadorBusqueda = setTimeout(() => obtenerOTs($("input-buscar").value.trim()), 300);
+});
+$("input-buscar-cliente").addEventListener("input", () => {
+  $("input-cliente").value = "";
+  clearTimeout(temporizadorCliente);
+  temporizadorCliente = setTimeout(() => buscarClientes($("input-buscar-cliente").value.trim()), 300);
+});
+$("btn-nuevo-cliente").addEventListener("click", () => {
+  $("form-cliente").classList.toggle("oculto");
+  $("input-cliente").value = ""; $("input-buscar-cliente").value = "";
+});
+btnLogin.addEventListener("click", () => pca.loginRedirect({ scopes: [SCOPE] }));
+btnSalir.addEventListener("click", () => pca.logoutRedirect());
+btnConsultar.addEventListener("click", () => { $("input-buscar").value = ""; obtenerOTs(); });
+$("btn-agregar-item").addEventListener("click", () => agregarItem());
 $("btn-eliminar").addEventListener("click", eliminarActual);
 $("btn-cerrar-detalle").addEventListener("click", () => detalle.classList.add("oculto"));
 formCrear.addEventListener("submit", crearOT);

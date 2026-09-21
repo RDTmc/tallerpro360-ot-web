@@ -40,11 +40,27 @@
 <section class="card">
 <h2 class="titulo-seccion">Nueva orden</h2>
 <form id="form-crear">
+<h3 class="titulo-seccion">Cliente</h3>
+<input type="search" id="input-buscar-cliente" placeholder="Buscar por RUT, nombre o código…" autocomplete="off">
+<input type="hidden" id="input-cliente" value="">
+<div id="sugerencias-cliente"></div>
+<button type="button" id="btn-nuevo-cliente" class="secundario">+ Nuevo cliente</button>
+<div id="form-cliente" class="oculto">
 <div class="grid2">
-<input type="text" id="input-cliente" list="lista-clientes" placeholder="Cliente (ej: CLI-004)" required maxlength="20">
-<datalist id="lista-clientes"></datalist>
-<input type="text" id="input-patente" placeholder="Patente (ej: ZZXX99)" required maxlength="10">
+<input type="text" id="cli-rut" placeholder="RUT (ej: 55555555-5)" maxlength="12">
+<input type="text" id="cli-codigo" placeholder="Código (ej: CLI-005)" maxlength="20">
 </div>
+<div class="grid2">
+<input type="text" id="cli-nombres" placeholder="Nombres" maxlength="60">
+<input type="text" id="cli-apellidos" placeholder="Apellidos" maxlength="60">
+</div>
+<div class="grid2">
+<input type="date" id="cli-fecha">
+<input type="email" id="cli-correo" placeholder="Correo" maxlength="100">
+</div>
+<input type="tel" id="cli-telefono" placeholder="Teléfono" maxlength="20">
+</div>
+<input type="text" id="input-patente" placeholder="Patente (ej: ZZXX99)" required maxlength="10">
 <input type="text" id="input-descripcion" placeholder="Descripción" maxlength="200">
 <div class="grid2">
 <input type="number" id="input-total" placeholder="Total CLP" min="0" step="1" value="0">
