@@ -23,6 +23,7 @@
 <h2 class="titulo-seccion">Órdenes de trabajo</h2>
 <button id="btn-consultar" disabled>Actualizar</button>
 </div>
+<input type="search" id="input-buscar" placeholder="Buscar por OT, cliente o patente…">
 <p id="mensaje" class="mensaje"></p>
 <ul id="lista-ot"></ul>
 </section>
@@ -40,7 +41,8 @@
 <h2 class="titulo-seccion">Nueva orden</h2>
 <form id="form-crear">
 <div class="grid2">
-<input type="text" id="input-cliente" placeholder="Cliente (ej: CLI-004)" required maxlength="20">
+<input type="text" id="input-cliente" list="lista-clientes" placeholder="Cliente (ej: CLI-004)" required maxlength="20">
+<datalist id="lista-clientes"></datalist>
 <input type="text" id="input-patente" placeholder="Patente (ej: ZZXX99)" required maxlength="10">
 </div>
 <input type="text" id="input-descripcion" placeholder="Descripción" maxlength="200">

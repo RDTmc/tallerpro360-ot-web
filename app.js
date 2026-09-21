@@ -50,10 +50,18 @@ async function api(path, opciones = {}) {
     headers: { "Content-Type": "application/json", Authorization: "Bearer " + token, ...(opciones.headers || {}) },
   });
 }
+let ordenesActuales = [];
 function pintarLista(ots) {
+  ordenesActuales = ots;
+  aplicarFiltro();
+}
+function aplicarFiltro() {
+  const q = ($("input-buscar").value || "").toLowerCase();
+  const filtradas = ordenesActuales.filter((ot) =>
+    (ot.ot_id + " " + ot.cliente_id + " " + ot.patente + " " + (ot.descripcion || "")).toLowerCase().includes(q));
   listaOT.innerHTML = "";
-  if (!ots.length) { listaOT.innerHTML = "<li>Sin órdenes.</li>"; return; }
-  ots.forEach((ot) => {
+  if (!filtradas.length) { listaOT.innerHTML = "<li>Sin resultados.</li>"; return; }
+  filtradas.forEach((ot) => {
     const li = document.createElement("li");
     li.className = "ot";
     li.innerHTML = `<div><strong>${ot.ot_id}</strong> · ${ot.patente} · ${ot.cliente_id}<br>
@@ -72,7 +80,10 @@ async function obtenerOTs() {
     if (r.status === 403) { mensaje.textContent = "Sin permiso para ver órdenes."; return; }
     if (!r.ok) throw new Error("HTTP " + r.status);
     mensaje.textContent = "";
-    pintarLista(await r.json());
+    const ots = await r.json();
+    pintarLista(ots);
+    $("lista-clientes").innerHTML = [...new Set(ots.map((o) => o.cliente_id))]
+      .map((c) => `<option value="${c}">`).join("");
   } catch (e) { mensaje.textContent = "Error al consultar: " + e.message; }
 }
 let detalleIdActual = null;
@@ -120,6 +131,7 @@ async function crearOT(ev) {
     obtenerOTs();
   } catch (e) { mensaje.textContent = "Error: " + e.message; }
 }
+$("input-buscar").addEventListener("input", aplicarFiltro);
 btnLogin.addEventListener("click", () => pca.loginRedirect({ scopes: [SCOPE] }));
 btnSalir.addEventListener("click", () => pca.logoutRedirect());
 btnConsultar.addEventListener("click", obtenerOTs);
