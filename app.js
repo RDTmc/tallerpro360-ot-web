@@ -43,6 +43,13 @@ function mostrarSesion() {
   btnSalir.classList.toggle("oculto", !ok);
   btnConsultar.disabled = !ok;
   formCrear.querySelector('[type="submit"]').disabled = !ok;
+  $("input-buscar").disabled = !ok;
+  $("input-buscar").placeholder = ok ? "Buscar por OT, cliente o patente…" : "Inicia sesión para buscar…";
+  $("input-buscar-cliente").disabled = !ok;
+  $("input-buscar-cliente").placeholder = ok ? "Buscar por RUT, nombre o código…" : "Inicia sesión para buscar…";
+  $("btn-nuevo-cliente").disabled = !ok;
+  if (!ok) { mensaje.textContent = "Inicia sesión para operar con las órdenes."; }
+  else if (mensaje.textContent === "Inicia sesión para operar con las órdenes.") { mensaje.textContent = ""; }
 }
 async function api(path, opciones = {}) {
   const token = await obtenerToken();
@@ -55,6 +62,7 @@ async function api(path, opciones = {}) {
 function pintarLista(ots) {
   listaOT.innerHTML = "";
   if (!ots.length) { listaOT.innerHTML = "<li>Sin resultados.</li>"; return; }
+  mensaje.textContent = ots.length + (ots.length === 1 ? " resultado." : " resultados.");
   ots.forEach((ot) => {
     const li = document.createElement("li");
     li.className = "ot";
@@ -109,10 +117,12 @@ async function eliminarActual() {
 // ---------- clientes: buscador RUT/nombre + alta ----------
 async function buscarClientes(q) {
   const box = $("sugerencias-cliente");
-  if (!q) { box.innerHTML = ""; return; }
+  if (!q) { box.innerHTML = '<span class="muted">Escribe RUT, nombre o código…</span>'; return; }
+  box.innerHTML = '<span class="muted">Buscando…</span>';
   try {
     const r = await api("/api/clientes?q=" + encodeURIComponent(q));
-    if (!r.ok) return;
+    if (r.status === 401) { box.innerHTML = '<span class="muted">Sesión expirada: inicia sesión.</span>'; return; }
+    if (!r.ok) throw new Error("HTTP " + r.status);
     const rows = await r.json();
     box.innerHTML = "";
     rows.forEach((c) => {
@@ -127,14 +137,23 @@ async function buscarClientes(q) {
       box.appendChild(b);
     });
     if (!rows.length) box.innerHTML = '<span class="muted">Sin coincidencias: usa "+ Nuevo cliente".</span>';
-  } catch (e) { /* reintenta al escribir */ }
+    else box.insertAdjacentHTML("afterbegin", `<span class="muted">${rows.length} coincidencia(s).</span>`);
+  } catch (e) { box.innerHTML = '<span class="muted">Backend no disponible: reintenta.</span>'; }
 }
 function agregarItem(concepto = "", cantidad = 1, precio = 0) {
   const row = document.createElement("div");
   row.className = "grid3 item-row";
   row.innerHTML = `<input placeholder="Concepto" value="${concepto}" required maxlength="40">
     <input type="number" placeholder="Cant." min="0.01" step="0.01" value="${cantidad}" required>
-    <input type="number" placeholder="P. unit CLP" min="0" step="1" value="${precio}" required>`;
+    <input type="number" placeholder="P. unit CLP" min="0" step="1" value="${precio}" required>
+    <button type="button" class="icono-papelera" title="Quitar ítem" aria-label="Quitar ítem">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </button>`;
+  row.querySelector(".icono-papelera").addEventListener("click", () => {
+    const conDatos = [...row.querySelectorAll("input")].some((i) => i.value && i.value !== "1" && i.value !== "0");
+    if (conDatos && !confirm("¿Quitar este ítem?")) return;
+    row.remove();
+  });
   itemsDiv.appendChild(row);
 }
 function abrirModalCliente() { $("modal-cliente").classList.remove("oculto"); }

@@ -18,6 +18,8 @@ button.secundario { background: #e5e9f2; color: #1f2937; }
 button.peligro { background: #dc2626; }
 button.peligro:hover { background: #b91c1c; }
 .sugerencia { display: block; width: 100%; text-align: left; margin-bottom: 6px; }
+.icono-papelera { background: transparent; color: #dc2626; padding: 8px; }
+.icono-papelera:hover { background: #fee2e2; }
 #sugerencias-cliente { margin-bottom: 10px; }
 #form-cliente { border: 1px dashed #cbd2e1; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
 button.accion { margin: 4px 0 14px; }
@@ -29,6 +31,7 @@ button.oculto, .oculto { display: none !important; }
 input { border: 1px solid #cbd2e1; border-radius: 8px; margin-bottom: 10px; padding: 10px; width: 100%; font-size: 14px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .grid3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+.item-row { grid-template-columns: 2fr 1fr 1fr auto; align-items: center; }
 .mensaje { color: #2f54eb; min-height: 20px; margin-bottom: 10px; }
 #lista-ot { list-style: none; display: grid; gap: 10px; }
 #lista-ot li.ot { display: flex; justify-content: space-between; align-items: center; background: #f7f9fd; border: 1px solid #e3e8f2; border-radius: 10px; padding: 12px 14px; }
