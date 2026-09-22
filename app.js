@@ -1,4 +1,4 @@
-// TallerPro360 OT — frontend MSAL (Auth Code + PKCE) contra API Gateway.
+
 const API_BASE_URL = "https://ny0gbkz69g.execute-api.us-east-1.amazonaws.com";
 const TENANT_ID = "a4cc5fc6-a27b-43af-91af-bab64b4e97ce";
 const CLIENT_ID = "94997922-80e9-4664-8743-85316d34ba1b";
@@ -21,7 +21,7 @@ const btnConsultar = $("btn-consultar"), listaOT = $("lista-ot"),
   nombreUsuario = $("nombre-usuario"), itemsDiv = $("items"),
   detalle = $("detalle"), detalleTitulo = $("detalle-titulo"),
   detalleCuerpo = $("detalle-cuerpo");
-/* fmtCLP, normalizarPatente y subtotalItem vienen de utils.js (script previo). */
+
 let temporizadorBusqueda = null, temporizadorCliente = null, detalleIdActual = null;
 
 function cuentaActual() { return pca.getAllAccounts()[0] || null; }
@@ -44,8 +44,7 @@ function mostrarSesion() {
   btnConsultar.disabled = !ok;
   formCrear.querySelector('[type="submit"]').disabled = !ok;
   $("btn-nuevo-cliente").disabled = !ok;
-  // Los buscadores SIEMPRE están activos: sin sesión el backend responde 401
-  // y la UI lo comunica. Así DevTools muestra tráfico real en todo momento.
+ 
   if (!ok) { mensaje.textContent = "Explora con el buscador o inicia sesión para operar."; }
   else if (mensaje.textContent === "Explora con el buscador o inicia sesión para operar.") { mensaje.textContent = ""; }
 }
@@ -56,7 +55,8 @@ async function api(path, opciones = {}) {
     headers: { "Content-Type": "application/json", Authorization: "Bearer " + token, ...(opciones.headers || {}) },
   });
 }
-// ---------- órdenes ----------
+
+// --- ordenes(OT) 
 function pintarLista(ots) {
   listaOT.innerHTML = "";
   if (!ots.length) { listaOT.innerHTML = "<li>Sin resultados.</li>"; return; }
@@ -83,8 +83,7 @@ async function obtenerOTs(q = "") {
     pintarLista(await r.json());
   } catch (e) { mensaje.textContent = "Error al consultar: " + e.message; }
 }
-// Llamada que NO exige sesión previa: deja que el backend responda (401/200).
-// Así el docente ve tráfico real en DevTools con y sin login.
+
 async function apiSinSesion(path, opciones = {}) {
   const cuenta = cuentaActual();
   const headers = { "Content-Type": "application/json", ...(opciones.headers || {}) };
@@ -125,7 +124,7 @@ async function eliminarActual() {
     obtenerOTs();
   } catch (e) { mensaje.textContent = "Error al eliminar: " + e.message; }
 }
-// ---------- clientes: buscador RUT/nombre + alta ----------
+// --- clientes: buscador RUT/nombre 
 async function buscarClientes(q) {
   const box = $("sugerencias-cliente");
   if (!q) { box.innerHTML = '<span class="muted">Busca por RUT (ej: 11111111-1), nombre o código (ej: CLI-001).</span>'; return; }
@@ -212,7 +211,7 @@ async function crearOT(ev) {
     obtenerOTs();
   } catch (e) { mensaje.textContent = "Error: " + e.message; }
 }
-// ---------- eventos ----------
+// --- eventos 
 $("input-buscar").addEventListener("input", () => {
   clearTimeout(temporizadorBusqueda);
   temporizadorBusqueda = setTimeout(() => obtenerOTs($("input-buscar").value.trim()), 300);
