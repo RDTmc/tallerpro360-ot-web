@@ -43,13 +43,11 @@ function mostrarSesion() {
   btnSalir.classList.toggle("oculto", !ok);
   btnConsultar.disabled = !ok;
   formCrear.querySelector('[type="submit"]').disabled = !ok;
-  $("input-buscar").disabled = !ok;
-  $("input-buscar").placeholder = ok ? "Buscar por OT, cliente o patente…" : "Inicia sesión para buscar…";
-  $("input-buscar-cliente").disabled = !ok;
-  $("input-buscar-cliente").placeholder = ok ? "Buscar por RUT, nombre o código…" : "Inicia sesión para buscar…";
   $("btn-nuevo-cliente").disabled = !ok;
-  if (!ok) { mensaje.textContent = "Inicia sesión para operar con las órdenes."; }
-  else if (mensaje.textContent === "Inicia sesión para operar con las órdenes.") { mensaje.textContent = ""; }
+  // Los buscadores SIEMPRE están activos: sin sesión el backend responde 401
+  // y la UI lo comunica. Así DevTools muestra tráfico real en todo momento.
+  if (!ok) { mensaje.textContent = "Explora con el buscador o inicia sesión para operar."; }
+  else if (mensaje.textContent === "Explora con el buscador o inicia sesión para operar.") { mensaje.textContent = ""; }
 }
 async function api(path, opciones = {}) {
   const token = await obtenerToken();
@@ -77,13 +75,26 @@ function pintarLista(ots) {
 async function obtenerOTs(q = "") {
   try {
     mensaje.textContent = "Cargando…";
-    const r = await api("/api/ot" + (q ? "?q=" + encodeURIComponent(q) : ""));
-    if (r.status === 401) { mensaje.textContent = "Sesión expirada: inicia sesión de nuevo."; return; }
+    const r = await apiSinSesion("/api/ot" + (q ? "?q=" + encodeURIComponent(q) : ""));
+    if (r.status === 401) { mensaje.textContent = "Inicia sesión para ver las órdenes."; listaOT.innerHTML = ""; return; }
     if (r.status === 403) { mensaje.textContent = "Sin permiso para ver órdenes."; return; }
     if (!r.ok) throw new Error("HTTP " + r.status);
     mensaje.textContent = "";
     pintarLista(await r.json());
   } catch (e) { mensaje.textContent = "Error al consultar: " + e.message; }
+}
+// Llamada que NO exige sesión previa: deja que el backend responda (401/200).
+// Así el docente ve tráfico real en DevTools con y sin login.
+async function apiSinSesion(path, opciones = {}) {
+  const cuenta = cuentaActual();
+  const headers = { "Content-Type": "application/json", ...(opciones.headers || {}) };
+  if (cuenta) {
+    try {
+      const token = await obtenerToken();
+      if (token) headers.Authorization = "Bearer " + token;
+    } catch (e) { /* sin token: el backend dirá 401 */ }
+  }
+  return fetch(API_BASE_URL + path, { ...opciones, headers });
 }
 async function verDetalle(otId) {
   try {
@@ -117,11 +128,12 @@ async function eliminarActual() {
 // ---------- clientes: buscador RUT/nombre + alta ----------
 async function buscarClientes(q) {
   const box = $("sugerencias-cliente");
-  if (!q) { box.innerHTML = '<span class="muted">Escribe RUT, nombre o código…</span>'; return; }
+  if (!q) { box.innerHTML = '<span class="muted">Busca por RUT (ej: 11111111-1), nombre o código (ej: CLI-001).</span>'; return; }
+  if (q.length < 3) { box.innerHTML = '<span class="muted">Escribe al menos 3 caracteres…</span>'; return; }
   box.innerHTML = '<span class="muted">Buscando…</span>';
   try {
-    const r = await api("/api/clientes?q=" + encodeURIComponent(q));
-    if (r.status === 401) { box.innerHTML = '<span class="muted">Sesión expirada: inicia sesión.</span>'; return; }
+    const r = await apiSinSesion("/api/clientes?q=" + encodeURIComponent(q));
+    if (r.status === 401) { box.innerHTML = '<span class="muted">Inicia sesión para buscar clientes.</span>'; return; }
     if (!r.ok) throw new Error("HTTP " + r.status);
     const rows = await r.json();
     box.innerHTML = "";
@@ -136,7 +148,7 @@ async function buscarClientes(q) {
       });
       box.appendChild(b);
     });
-    if (!rows.length) box.innerHTML = '<span class="muted">Sin coincidencias: usa "+ Nuevo cliente".</span>';
+    if (!rows.length) box.innerHTML = '<span class="muted">No se encontró: verifica RUT/nombre/código o usa "+ Nuevo cliente".</span>';
     else box.insertAdjacentHTML("afterbegin", `<span class="muted">${rows.length} coincidencia(s).</span>`);
   } catch (e) { box.innerHTML = '<span class="muted">Backend no disponible: reintenta.</span>'; }
 }
